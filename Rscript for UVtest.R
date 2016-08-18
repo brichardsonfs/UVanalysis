@@ -4,7 +4,7 @@ require(lmerTest)
 require(doBy)
 require(lattice)
 
-uv <- read.csv(file="ephraimplatemastersheet.csv", sep=",",head=TRUE, na.string="na")
+uv <- read.csv(file="Majorsplatemastersheet.csv", sep=",",head=TRUE, na.string="na")
 uv <- uv[-c(367), ]
 ##reshape for plotting
 comp_uv <- tidyr::gather(uv,"wavelength","absorbance",4:17)
