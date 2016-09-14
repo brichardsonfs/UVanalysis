@@ -4,13 +4,11 @@ require(lmerTest)
 require(doBy)
 require(lattice)
 ###absorbance curb data
-uv <- read.csv(file="Majorsplatemastersheet.csv", sep=",",head=TRUE, na.string="na")
-###remove arbuscula
-uv <- uv[-c(367), ]
-uv <- uv[-c(32:36), ]
+uv <- read.csv(file="ARTRmastersheet.csv", sep=",",head=TRUE, na.string="na")
+
 
 ##reshape for plotting
-comp_uv <- tidyr::gather(uv,"wavelength","absorbance",6:19)
+comp_uv <- tidyr::gather(uv,"wavelength","absorbance",5:18)
 
 comp_uv <- na.omit(comp_uv)
 uv_sum1 <- summaryBy(absorbance~pop+ssp+wavelength, data=comp_uv, FUN=c(mean,min,max))
@@ -44,14 +42,14 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE, conf.i
   
   return(datac)
 }
-uv_sum2 <- summarySE(comp_uv, measurevar="absorbance", groupvars=c("wavelength","ssp"))
-uv_sum3 <- summarySE(comp_uv, measurevar="absorbance", groupvars=c("wavelength","type"))
-
+uv_sum2 <- summarySE(comp_uv, measurevar="absorbance", groupvars=c("wavelength","garden","type"))
+#uv_sum3 <- summarySE(comp_uv, measurevar="absorbance", groupvars=c("wavelength","type"))
+uv_sum2 <- na.omit(uv_sum2)
 
 
 ###plotting
-w <- ggplot(uv_sum2, aes(wavelength, absorbance,color=ssp))
-w + geom_point() + geom_line(aes(group=ssp)) + geom_errorbar(aes(ymin = (absorbance +ci), ymax = (absorbance - ci), width = 0.2)) + theme_bw()
+w <- ggplot(uv_sum2, aes(wavelength, absorbance,color=type))
+w +facet_grid(.~garden) + geom_point() + geom_line(aes(group=type)) + geom_errorbar(aes(ymin = (absorbance +ci), ymax = (absorbance - ci), width = 0.2)) + theme_bw()
 
 w <- ggplot(uv_sum3, aes(wavelength, absorbance,color=type))
 w + geom_point() + geom_line(aes(group=type)) + geom_errorbar(aes(ymin = (absorbance +ci), ymax = (absorbance - ci), width = 0.2)) + theme_bw()
@@ -59,12 +57,16 @@ w + geom_point() + geom_line(aes(group=type)) + geom_errorbar(aes(ymin = (absorb
 
 
 ###lmer
-lmer_uv <- lmer(X330nm ~  lat + elev + (1|ssp:pop),  data=uvclimate)
+lmer_uv <- lmer(X330nm ~  ssp + (1|ssp:pop),  data=uvclimate)
 summary(lmer_uv)
 rand(lmer_uv)
-re_pop <- ranef(lmer_uv, condVar=TRUE, whichel = "ssp:elev")
+re_pop <- ranef(lmer_uv, condVar=TRUE, whichel = "ssp:pop")
 dotplot(re_pop)
 
+re_pop1 <- unlist(re_pop)
+re_pop2 <- as.vector(re_pop1)
+
+uvclimatesum <- cbind(uvclimatesum,re_pop2)
 
 ###UV data @330nm and climate data
 #uvclimate <- read.csv(file="UV-climate.csv", sep=",",head=TRUE, na.string="na")
